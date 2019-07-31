@@ -15,6 +15,7 @@ import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -146,12 +147,6 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
      * public final class _ComponentInitializerHelper implements IInitializer {
      *     private AppInit appInit;
      *
-     *     private boolean isDebug;
-     *
-     *     public _ComponentInitializerHelper(boolean isDebug) {
-     *         this.isDebug = isDebug;
-     *     }
-     *
      *     private void init() {
      *         this.appInit = new AppInit();
      *     }
@@ -163,11 +158,13 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
      *     }
      *
      *     private void execute(final Application application) {
-     *         Executors.newSingleThreadExecutor().execute(new Runnable() {
+     *         final ExecutorService executor = Executors.newSingleThreadExecutor();
+     *         executor.execute(new Runnable() {
      *             public void run() {
      *                 appInit.async1(application);
      *                 appInit.async30(application);
      *                 appInit.async100(application);
+     *                 executor.shutdown();
      *             }
      *         });
      *         appInit.sync1(application);
@@ -185,10 +182,6 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
         for (InitClassInfo info : classList) {
             builder.addField(generateField(info.element, info.variableName));
         }
-        //isDebug
-        builder.addField(TypeName.BOOLEAN, InitConstant.GENERATE_FIELD_ISDEBUG, Modifier.PRIVATE);
-        //生成构造方法
-        builder.addMethod(generateConstructor());
         //生成init方法
         builder.addMethod(generatorInitMethod());
         //实现接口start方法
@@ -219,28 +212,12 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
     }
 
     /**
-     * 生成构造函数
-     * <p>
-     * 例如：
-     * public _ComponentInitializerHelper(boolean isDebug) {
-     *     this.isDebug = isDebug;
-     * }
-     */
-    private MethodSpec generateConstructor() {
-        return MethodSpec.constructorBuilder()
-                .addModifiers(Modifier.PUBLIC)
-                .addParameter(TypeName.BOOLEAN, InitConstant.GENERATE_FIELD_ISDEBUG)
-                .addStatement("this.$N = $N", InitConstant.GENERATE_FIELD_ISDEBUG, InitConstant.GENERATE_FIELD_ISDEBUG)
-                .build();
-    }
-
-    /**
      * 生成init方法初始化需要调用的类
      * <p>
      * 例如：
-     *private void init() {
-     *    this.appInit = new AppInit();
-     *}
+     * private void init() {
+     *     this.appInit = new AppInit();
+     * }
      */
     private MethodSpec generatorInitMethod() {
         MethodSpec.Builder builder = MethodSpec.methodBuilder(InitConstant.GENERATE_METHOD_INIT)
@@ -279,11 +256,13 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
      * <p>
      * 例如：
      * private void execute(final Application application) {
-     *     Executors.newSingleThreadExecutor().execute(new Runnable() {
+     *     final ExecutorService executor = Executors.newSingleThreadExecutor();
+     *     executor.execute(new Runnable() {
      *         public void run() {
      *             appInit.async1(application);
      *             appInit.async30(application);
      *             appInit.async100(application);
+     *             executor.shutdown();
      *         }
      *     });
      *     appInit.sync1(application);
@@ -298,9 +277,13 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
 
         //生成初始化异步方法代码
         CodeBlock.Builder codeBuilder = CodeBlock.builder()
-                .add("$T.$L().$L(new $T(){ public void run() {\n",
+                .add("final $T $L = $T.$L();\n",
+                        ExecutorService.class,
+                        "executor",
                         Executors.class,
-                        "newSingleThreadExecutor",
+                        "newSingleThreadExecutor")
+                .add("$N.$L(new $T(){ public void run() {\n",
+                        "executor",
                         "execute",
                         Runnable.class);
         for (InitMethodInfo info : asyncList) {
@@ -309,7 +292,7 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
                             : new Object[]{info.classVariableName, info.methodName}
             );
         }
-        codeBuilder.add("}})");
+        codeBuilder.add("$N.shutdown();\n}})", "executor");
         builder.addStatement(codeBuilder.build());
 
         //生成初始化同步方法代码

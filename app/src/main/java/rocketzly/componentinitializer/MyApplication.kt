@@ -12,6 +12,7 @@ open class MyApplication : Application() {
         super.onCreate()
         ComponentInitializer.builder()
             .debug(true)
+            .initializer(ComponentInitializerHelper_())
             .start(this)
     }
 }

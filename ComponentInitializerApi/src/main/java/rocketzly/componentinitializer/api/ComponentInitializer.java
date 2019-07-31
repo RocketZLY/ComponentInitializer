@@ -1,16 +1,9 @@
 package rocketzly.componentinitializer.api;
 
 import android.app.Application;
-import rocketzly.componentinitializer.IInitContainer;
+import rocketzly.componentinitializer.IInitializer;
 import rocketzly.componentinitializer.InitConstant;
-import rocketzly.componentinitializer.InitMethodInfo;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by rocketzly on 2019/7/23.
@@ -18,91 +11,64 @@ import java.util.concurrent.Executors;
 public class ComponentInitializer {
 
     private boolean isDebug;
-    private ExecutorService executor;
-    private ConcurrentHashMap<String, Object> map = new ConcurrentHashMap<>(16);
+    private IInitializer initializer;
 
-    public ComponentInitializer(boolean isDebug, ExecutorService executor) {
+    public ComponentInitializer(boolean isDebug) {
+        this(isDebug, null);
+    }
+
+    public ComponentInitializer(boolean isDebug, IInitializer initializer) {
         this.isDebug = isDebug;
-        this.executor = executor == null ? Executors.newSingleThreadExecutor() : executor;
+        this.initializer = initializer;
         Logger.setDebug(isDebug);
     }
 
-    @SuppressWarnings("unchecked")
     public void start(Application application) {
         if (application == null) {
             Logger.e("Application不能为null");
             return;
         }
-        Class<IInitContainer> clazz = null;
-        IInitContainer initContainer = null;
+        IInitializer initializer = getInitializer(application.getClassLoader());
+        if (initializer == null) {
+            return;
+        }
+        initializer.start(application);
+    }
+
+    private IInitializer getInitializer(ClassLoader classLoader) {
+        if (this.initializer != null) {
+            return this.initializer;
+        }
+        return loadInitializer(classLoader);
+    }
+
+    @SuppressWarnings("unchecked")
+    private IInitializer loadInitializer(ClassLoader classLoader) {
+        Class<IInitializer> clazz = null;
+        IInitializer initializer = null;
+        String qualifiedClassName = "";
         try {
-            clazz = (Class<IInitContainer>) application.getClassLoader().loadClass(InitConstant.GENERATE_PACKAGE_NAME + "." + InitConstant.GENERATE_CLASS_NAME);
+            clazz = (Class<IInitializer>) classLoader.loadClass(qualifiedClassName = InitConstant.GENERATE_PACKAGE_NAME + "." + InitConstant.GENERATE_CLASS_NAME);
         } catch (Exception e) {
             e.printStackTrace();
         }
         if (clazz == null) {
-            Logger.e(InitConstant.GENERATE_CLASS_NAME + "加载失败！！");
-            return;
+            Logger.e(qualifiedClassName + "加载失败！！");
+            return null;
         }
 
         try {
-            initContainer = clazz.newInstance();
+            initializer = clazz.newInstance();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         } catch (InstantiationException e) {
             e.printStackTrace();
         }
-        if (initContainer == null) {
-            Logger.e("IInitContainer实例化失败");
-            return;
+        if (initializer == null) {
+            Logger.e(qualifiedClassName + "实例化失败");
+            return null;
         }
-        execute(application, initContainer);
-    }
-
-    private void execute(final Application application, final IInitContainer initContainer) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                execute(application, initContainer.getAsyncInitMethodList());
-                executor.shutdown();
-            }
-        });
-        execute(application, initContainer.getSyncInitMethodList());
-    }
-
-    private void execute(Application application, List<InitMethodInfo> list) {
-        for (InitMethodInfo methodInfo : list) {
-            Object instance = null;
-            if (!(map.containsKey(methodInfo.className))) {
-                try {
-                    instance = Class.forName(methodInfo.className).newInstance();
-                    map.put(methodInfo.className, instance);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            if ((instance = map.get(methodInfo.className)) == null) {
-                Logger.e(methodInfo.className + "实例获取失败");
-                continue;
-            }
-
-            try {
-                Method method = instance.getClass().getMethod(methodInfo.methodName,
-                        methodInfo.isParams ? new Class<?>[]{Application.class} : new Class<?>[]{});
-                method.setAccessible(true);
-                method.invoke(instance, methodInfo.isParams ? new Object[]{application} : new Object[]{});
-                Logger.i(methodInfo.className + "#" + methodInfo.methodName + "()调用成功");
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-                Logger.e(methodInfo.className + "#" + methodInfo.methodName + "()方法未找到");
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-                Logger.e(methodInfo.className + "#" + methodInfo.methodName + "()方法无法访问");
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-                Logger.e(methodInfo.className + "#" + methodInfo.methodName + "()方法调用失败");
-            }
-        }
+        return initializer;
     }
 
     public static Builder builder() {
@@ -111,20 +77,20 @@ public class ComponentInitializer {
 
     public static class Builder {
         private boolean isDebug = false;
-        private ExecutorService executor;
+        private IInitializer initializer;
 
         public Builder debug(boolean isDebug) {
             this.isDebug = isDebug;
             return this;
         }
 
-        public Builder executor(ExecutorService executor) {
-            this.executor = executor;
+        public Builder initializer(IInitializer initializer) {
+            this.initializer = initializer;
             return this;
         }
 
         public void start(Application application) {
-            new ComponentInitializer(isDebug, executor).start(application);
+            new ComponentInitializer(isDebug, initializer).start(application);
         }
     }
 }
