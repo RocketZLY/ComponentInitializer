@@ -84,7 +84,7 @@ public class ComponentInitializer {
             return this;
         }
 
-        public Builder initializer(IInitializer initializer) {
+        public Builder inject(IInitializer initializer) {
             this.initializer = initializer;
             return this;
         }

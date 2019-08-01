@@ -5,7 +5,7 @@ import android.util.Log;
 /**
  * Created by rocketzly on 2019/7/23.
  */
-public class Logger {
+class Logger {
 
     private static boolean isDebug = false;
     private static String TAG = "ComponentInitializer";

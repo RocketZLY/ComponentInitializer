@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
  * Created by rocketzly on 2019/7/17.
  */
 @AutoService(Processor.class)
+@SupportedOptions("initializer")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @SupportedAnnotationTypes("rocketzly.componentinitializer.annotation.Init")
 public class ComponentInitializerProcessor extends AbstractProcessor {
@@ -31,7 +32,9 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
     private Messager messager;
     private Types typeUtils;
     private Elements elementUtils;
-    private String APPLICATION_QUALIFIED_NAME = "android.app.Application";
+    private ProcessingEnvironment processingEnv;
+    private final String OPTION_INITIALIZER = "initializer";
+    private final String APPLICATION_QUALIFIED_NAME = "android.app.Application";
     private List<InitMethodInfo> syncList = new ArrayList<>(20);
     private List<InitMethodInfo> asyncList = new ArrayList<>(20);
     private HashSet<InitClassInfo> classList = new HashSet<>();
@@ -39,6 +42,7 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
+        this.processingEnv = processingEnv;
         messager = processingEnv.getMessager();
         typeUtils = processingEnv.getTypeUtils();
         elementUtils = processingEnv.getElementUtils();
@@ -174,7 +178,14 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
      * }
      */
     private void generate() {
-        TypeSpec.Builder builder = TypeSpec.classBuilder(InitConstant.GENERATE_CLASS_NAME)
+        String qualifiedClassName = processingEnv.getOptions().get(OPTION_INITIALIZER);
+        String className = qualifiedClassName == null ?
+                InitConstant.GENERATE_CLASS_NAME
+                : qualifiedClassName.substring(qualifiedClassName.lastIndexOf(".") + 1);
+        String packageName = qualifiedClassName == null ?
+                InitConstant.GENERATE_PACKAGE_NAME
+                : qualifiedClassName.substring(0, qualifiedClassName.lastIndexOf("."));
+        TypeSpec.Builder builder = TypeSpec.classBuilder(className)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addSuperinterface(IInitializer.class);
 
@@ -190,7 +201,7 @@ public class ComponentInitializerProcessor extends AbstractProcessor {
         builder.addMethod(generatorExecuteMethod());
 
         TypeSpec typeSpec = builder.build();
-        JavaFile javaFile = JavaFile.builder(InitConstant.GENERATE_PACKAGE_NAME, typeSpec)
+        JavaFile javaFile = JavaFile.builder(packageName, typeSpec)
                 .build();
         try {
             javaFile.writeTo(filer);
