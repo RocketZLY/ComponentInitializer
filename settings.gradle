@@ -1,1 +1,1 @@
-include ':app', ':ComponentInitializerProcessor', ':ComponentInitializerCommon', ':ComponentInitializerApi', ':moduleA', ':moduleB', ':moduleC', ':Common'
+include ':app', ':ComponentInitializerProcessor', ':ComponentInitializerCommon', ':ComponentInitializerApi', ':moduleA', ':moduleB', ':moduleC', ':common'
