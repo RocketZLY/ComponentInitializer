@@ -11,7 +11,7 @@ open class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         ComponentInitializer.builder()
-            .inject(InitializerImpl())
+//            .inject(ComponentInitializerHelper_())
             .debug(true)
             .start(this)
     }
