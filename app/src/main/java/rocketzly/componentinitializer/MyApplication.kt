@@ -1,17 +1,9 @@
 package rocketzly.componentinitializer
 
-import android.app.Application
-import rocketzly.componentinitializer.api.ComponentInitializer
+import com.rocketzly.common.BaseApplication
 
 /**
  * Created by rocketzly on 2019/7/17.
  */
-open class MyApplication : Application() {
-
-    override fun onCreate() {
-        super.onCreate()
-        ComponentInitializer.builder()
-            .debug(true)
-            .start(this)
-    }
+open class MyApplication : BaseApplication() {
 }
