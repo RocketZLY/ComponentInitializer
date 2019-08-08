@@ -31,4 +31,15 @@ public class InitMethodInfo implements Comparable<InitMethodInfo> {
     public int compareTo(InitMethodInfo o) {
         return this.priority - o.priority;
     }
+
+    @Override
+    public String toString() {
+        return "InitMethodInfo{" +
+                "className='" + className + '\'' +
+                ", methodName='" + methodName + '\'' +
+                ", isParams=" + isParams +
+                ", priority=" + priority +
+                ", thread=" + thread +
+                '}';
+    }
 }

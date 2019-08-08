@@ -1,8 +1,18 @@
 package rocketzly.componentinitializer.api;
 
 import android.app.Application;
-import rocketzly.componentinitializer.IInitializer;
+import android.content.pm.PackageManager;
+import rocketzly.componentinitializer.IInitMethodContainer;
 import rocketzly.componentinitializer.InitConstant;
+import rocketzly.componentinitializer.InitMethodInfo;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -11,15 +21,10 @@ import rocketzly.componentinitializer.InitConstant;
 public class ComponentInitializer {
 
     private boolean isDebug;
-    private IInitializer initializer;
+    private ConcurrentHashMap<String, Object> map = new ConcurrentHashMap<>(16);
 
     public ComponentInitializer(boolean isDebug) {
-        this(isDebug, null);
-    }
-
-    public ComponentInitializer(boolean isDebug, IInitializer initializer) {
         this.isDebug = isDebug;
-        this.initializer = initializer;
         Logger.setDebug(isDebug);
     }
 
@@ -28,47 +33,89 @@ public class ComponentInitializer {
             Logger.e("Application不能为null");
             return;
         }
-        IInitializer initializer = getInitializer(application.getClassLoader());
-        if (initializer == null) {
+        Set<String> fileNameByPackageName = null;
+        try {
+            fileNameByPackageName = ClassUtils.getFileNameByPackageName(application, InitConstant.GENERATE_PACKAGE_NAME);
+            Logger.i("通过包名找到的类:" + fileNameByPackageName.toString());
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (fileNameByPackageName == null) {
+            Logger.e("未找到初始化方法容器类");
             return;
         }
-        initializer.start(application);
+
+        List<InitMethodInfo> syncMethodList = new ArrayList<>();
+        List<InitMethodInfo> asyncMethodList = new ArrayList<>();
+        for (String className : fileNameByPackageName) {
+            try {
+                IInitMethodContainer initMethodContainer = (IInitMethodContainer) Class.forName(className).newInstance();
+                syncMethodList.addAll(initMethodContainer.getSyncInitMethodList());
+                asyncMethodList.addAll(initMethodContainer.getAsyncInitMethodList());
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            }
+        }
+        Collections.sort(syncMethodList);
+        Collections.sort(asyncMethodList);
+        Logger.i("同步方法:" + syncMethodList.toString());
+        Logger.i("异步方法:" + asyncMethodList.toString());
+        execute(application, syncMethodList, asyncMethodList);
     }
 
-    private IInitializer getInitializer(ClassLoader classLoader) {
-        if (this.initializer != null) {
-            return this.initializer;
-        }
-        return loadInitializer(classLoader);
+    private void execute(final Application application, List<InitMethodInfo> syncMethodList, final List<InitMethodInfo> asyncMethodList) {
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                execute(application, asyncMethodList);
+                executor.shutdown();
+            }
+        });
+        execute(application, syncMethodList);
     }
 
-    @SuppressWarnings("unchecked")
-    private IInitializer loadInitializer(ClassLoader classLoader) {
-        Class<IInitializer> clazz = null;
-        IInitializer initializer = null;
-        String qualifiedClassName = "";
-        try {
-            clazz = (Class<IInitializer>) classLoader.loadClass(qualifiedClassName = InitConstant.GENERATE_PACKAGE_NAME + "." + InitConstant.GENERATE_CLASS_NAME);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (clazz == null) {
-            Logger.e(qualifiedClassName + "加载失败！！");
-            return null;
-        }
+    private void execute(Application application, List<InitMethodInfo> list) {
+        for (InitMethodInfo methodInfo : list) {
+            Object instance = null;
+            if (!(map.containsKey(methodInfo.className))) {
+                try {
+                    instance = Class.forName(methodInfo.className).newInstance();
+                    map.put(methodInfo.className, instance);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            if ((instance = map.get(methodInfo.className)) == null) {
+                Logger.e(methodInfo.className + "实例获取失败");
+                continue;
+            }
 
-        try {
-            initializer = clazz.newInstance();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
+            try {
+                Method method = instance.getClass().getMethod(methodInfo.methodName,
+                        methodInfo.isParams ? new Class<?>[]{Application.class} : new Class<?>[]{});
+                method.setAccessible(true);
+                method.invoke(instance, methodInfo.isParams ? new Object[]{application} : new Object[]{});
+                Logger.i(methodInfo.className + "#" + methodInfo.methodName + "()调用成功，thread:"+Thread.currentThread().getName());
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+                Logger.e(methodInfo.className + "#" + methodInfo.methodName + "()方法未找到");
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                Logger.e(methodInfo.className + "#" + methodInfo.methodName + "()方法无法访问");
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+                Logger.e(methodInfo.className + "#" + methodInfo.methodName + "()方法调用失败");
+            }
         }
-        if (initializer == null) {
-            Logger.e(qualifiedClassName + "实例化失败");
-            return null;
-        }
-        return initializer;
     }
 
     public static Builder builder() {
@@ -77,20 +124,14 @@ public class ComponentInitializer {
 
     public static class Builder {
         private boolean isDebug = false;
-        private IInitializer initializer;
 
         public Builder debug(boolean isDebug) {
             this.isDebug = isDebug;
             return this;
         }
 
-        public Builder inject(IInitializer initializer) {
-            this.initializer = initializer;
-            return this;
-        }
-
         public void start(Application application) {
-            new ComponentInitializer(isDebug, initializer).start(application);
+            new ComponentInitializer(isDebug).start(application);
         }
     }
 }

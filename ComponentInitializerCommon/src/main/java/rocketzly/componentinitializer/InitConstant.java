@@ -15,7 +15,7 @@ public interface InitConstant {
     /**
      * 生成类名前缀
      */
-    String GENERATE_CLASS_NAME_PREFIX = "ComponentInitializerHelper_";
+    String GENERATE_CLASS_NAME_PREFIX = "InitializerContainer_";
     /**
      * 生成类的包名
      */
