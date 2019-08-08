@@ -5,28 +5,50 @@ package rocketzly.componentinitializer;
  */
 public interface InitConstant {
     /**
-     * 生成类的名称
+     * 配置参数的key
      */
-    String GENERATE_CLASS_NAME = "ComponentInitializerHelper_";
+    String INITIALIZER_MODULE_NAME = "INITIALIZER_MODULE_NAME";
+    /**
+     * 支持注解的全类名
+     */
+    String SUPPORT_ANNOTATION_QUALIFIED_NAME = "rocketzly.componentinitializer.annotation.Init";
+    /**
+     * 生成类名前缀
+     */
+    String GENERATE_CLASS_NAME_PREFIX = "ComponentInitializerHelper_";
     /**
      * 生成类的包名
      */
-    String GENERATE_PACKAGE_NAME = "rocketzly.componentinitializer";
+    String GENERATE_PACKAGE_NAME = "rocketzly.componentinitializer.generate";
     /**
-     * 生成初始化调用类方法名
+     * 生成同步list名
      */
-    String GENERATE_METHOD_INIT = "init";
+    String GENERATE_FIELD_SYNC_LIST = "syncList";
     /**
-     * 生成具体执行逻辑的方法名
+     * 生成异步list名
      */
-    String GENERATE_METHOD_EXECUTE = "execute";
+    String GENERATE_FIELD_ASYNC_LIST = "asyncList";
     /**
-     * 生成需要实现的接口方法名
+     * 获取同步初始化方法的方法名
      */
-    String GENERATE_METHOD_START = "start";
+    String GENERATE_METHOD_GET_SYNC_NAME = "getSyncInitMethodList";
     /**
-     * 生成application变量名
+     * 获取异步初始化方法的方法名
      */
-    String GENERATE_VARIABLE_APPLICATION = "application";
+    String GENERATE_METHOD_GET_ASYNC_NAME = "getAsyncInitMethodList";
+    /**
+     * log
+     */
+    String NO_MODULE_NAME_TIPS = "These no module name, at 'build.gradle', like :\n" +
+            "android {\n" +
+            "    defaultConfig {\n" +
+            "        ...\n" +
+            "        javaCompileOptions {\n" +
+            "            annotationProcessorOptions {\n" +
+            "                arguments = [INITIALIZER_MODULE_NAME: project.name]\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "}\n";
 
 }

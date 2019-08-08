@@ -10,13 +10,13 @@ import rocketzly.componentinitializer.annotation.ThreadMode;
  */
 public class ModuleAInit {
 
-        @Init(priority = 10, thread = ThreadMode.MAIN)
-        public void sync10(Application application) {
-            Log.i("zhuliyuan", "ModuleAInit_sync10");
-        }
+    @Init(priority = 10, thread = ThreadMode.MAIN)
+    public void sync10(Application application) {
+        Log.i("zhuliyuan", "ModuleAInit_sync10");
+    }
 
-        @Init(priority = 30, thread = ThreadMode.BACKGROUND)
-        public void async30(Application application) {
-            Log.i("zhuliyuan", "ModuleAInit_async30");
-        }
+    @Init(priority = 30, thread = ThreadMode.BACKGROUND)
+    public void async30(Application application) {
+        Log.i("zhuliyuan", "ModuleAInit_async30");
+    }
 }
