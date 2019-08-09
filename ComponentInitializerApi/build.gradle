@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-
+apply plugin: 'com.novoda.bintray-release'  // 新增
 android {
     compileSdkVersion 28
 
@@ -27,4 +27,14 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     api project(':ComponentInitializerCommon')
+}
+
+// 新增
+publish {
+    userOrg = 'zhuliyuan'        //bintray.com用户名
+    groupId = 'com.rocketzly'    //jcenter上的路径
+    artifactId = 'componentinitializer-api'   //项目名称
+    publishVersion = '1.0.0'//版本号
+    desc = '一个组件初始化辅助工具'//描述，自由填写
+    website = 'https://github.com/RocketZLY/ComponentInitializer' // 网址，自由填写
 }

@@ -1,4 +1,5 @@
 apply plugin: 'java-library'
+apply plugin: 'com.novoda.bintray-release'  // 新增
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -9,3 +10,13 @@ dependencies {
 
 sourceCompatibility = "7"
 targetCompatibility = "7"
+
+// 新增
+publish {
+    userOrg = 'zhuliyuan'        //bintray.com用户名
+    groupId = 'com.rocketzly'    //jcenter上的路径
+    artifactId = 'componentinitializer-compiler'   //项目名称
+    publishVersion = '1.0.0'//版本号
+    desc = '一个组件初始化辅助工具'//描述，自由填写
+    website = 'https://github.com/RocketZLY/ComponentInitializer' // 网址，自由填写
+}

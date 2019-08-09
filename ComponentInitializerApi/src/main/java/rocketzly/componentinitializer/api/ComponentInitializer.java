@@ -66,8 +66,8 @@ public class ComponentInitializer {
         }
         Collections.sort(syncMethodList);
         Collections.sort(asyncMethodList);
-        Logger.i("同步方法:" + syncMethodList.toString());
-        Logger.i("异步方法:" + asyncMethodList.toString());
+        Logger.i("同步初始化方法:" + syncMethodList.toString());
+        Logger.i("异步初始化方法:" + asyncMethodList.toString());
         execute(application, syncMethodList, asyncMethodList);
     }
 
@@ -104,7 +104,7 @@ public class ComponentInitializer {
                         methodInfo.isParams ? new Class<?>[]{Application.class} : new Class<?>[]{});
                 method.setAccessible(true);
                 method.invoke(instance, methodInfo.isParams ? new Object[]{application} : new Object[]{});
-                Logger.i(methodInfo.className + "#" + methodInfo.methodName + "()调用成功，thread:"+Thread.currentThread().getName());
+                Logger.i(methodInfo.className.substring(methodInfo.className.lastIndexOf(".") + 1) + "#" + methodInfo.methodName + "()调用成功，调用线程:" + Thread.currentThread().getName());
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
                 Logger.e(methodInfo.className + "#" + methodInfo.methodName + "()方法未找到");
