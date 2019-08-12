@@ -26,7 +26,8 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    api project(':ComponentInitializerCommon')
+//    api project(':ComponentInitializerCommon')
+    api 'com.rocketzly:componentinitializer-common:1.0.0'
 }
 
 // 新增
@@ -34,7 +35,7 @@ publish {
     userOrg = 'zhuliyuan'        //bintray.com用户名
     groupId = 'com.rocketzly'    //jcenter上的路径
     artifactId = 'componentinitializer-api'   //项目名称
-    publishVersion = '1.0.0'//版本号
+    publishVersion = '1.0.1'//版本号
     desc = '一个组件初始化辅助工具'//描述，自由填写
     website = 'https://github.com/RocketZLY/ComponentInitializer' // 网址，自由填写
 }
