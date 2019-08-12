@@ -6,7 +6,7 @@
 
 | 模块     | arouter-api | arouter-compiler |
 | :------- | ----------- | ----------- |
-| 最新版本 | [![download](https://img.shields.io/badge/download-1.0.0-blue)](https://bintray.com/beta/#/zhuliyuan/maven/componentinitializer-api) | [![download](https://img.shields.io/badge/download-1.0.0-blue)](https://bintray.com/beta/#/zhuliyuan/maven/componentinitializer-compiler) |
+| 最新版本 | [![download](https://img.shields.io/badge/download-1.0.1-blue)](https://bintray.com/beta/#/zhuliyuan/maven/componentinitializer-api) | [![download](https://img.shields.io/badge/download-1.0.1-blue)](https://bintray.com/beta/#/zhuliyuan/maven/componentinitializer-compiler) |
 
 ```groovy
 android {
