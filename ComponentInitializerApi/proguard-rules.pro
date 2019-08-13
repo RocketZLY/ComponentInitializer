@@ -19,3 +19,11 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+#rocketzly.componentinitializer.generate包名下的类不被混淆
+-keep class rocketzly.componentinitializer.generate.** { *; }
+-keep class rocketzly.componentinitializer.annotation.Init
+#用@init标记的类和方法不被混淆
+-keepclasseswithmembers class * {
+    @rocketzly.componentinitializer.annotation.Init <methods>;
+}
