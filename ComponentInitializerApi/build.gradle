@@ -32,7 +32,7 @@ publish {
     userOrg = publishConfig.userOrg     //bintray.com用户名
     groupId = publishConfig.groupId    //jcenter上的路径
     artifactId = 'componentinitializer-api'   //项目名称
-    publishVersion = '1.0.1'//版本号
+    publishVersion = '1.0.2'//版本号
     desc = publishConfig.desc//描述，自由填写
     website = publishConfig.website // 网址，自由填写
 }

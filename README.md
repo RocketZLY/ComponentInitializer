@@ -6,7 +6,7 @@
 
 | 模块     | componentinitializer-api | componentinitializer-compiler |
 | :------- | ----------- | ----------- |
-| 最新版本 | [![download](https://img.shields.io/badge/download-1.0.1-blue)](https://bintray.com/beta/#/zhuliyuan/maven/componentinitializer-api) | [![download](https://img.shields.io/badge/download-1.0.1-blue)](https://bintray.com/beta/#/zhuliyuan/maven/componentinitializer-compiler) |
+| 最新版本 | [![download](https://img.shields.io/badge/download-1.0.2-blue)](https://bintray.com/beta/#/zhuliyuan/maven/componentinitializer-api) | [![download](https://img.shields.io/badge/download-1.0.1-blue)](https://bintray.com/beta/#/zhuliyuan/maven/componentinitializer-compiler) |
 
 ```groovy
 android {
@@ -25,6 +25,8 @@ dependencies {
     annotationProcessor 'com.rocketzly:componentinitializer-compiler:x.x.x'
 }
 ```
+
+**目前已经支持混淆无需额外配置**
 
 ## 使用
 
@@ -49,7 +51,7 @@ public class ModuleAInit {
 }
 ```
 
-3. 在Application中触发初始化逻辑，我是直接写在了BaseApplication中
+3. 在Application中触发初始化逻辑，我是直接写在了BaseApplication中，其他模块继承即可
 
 ```java
 public class BaseApplication extends Application {
@@ -63,11 +65,14 @@ public class BaseApplication extends Application {
 }
 ```
 
-debug为true的时候可以通过ComponentInitializer标签查看日志信息
+## 调试
+
+```java
+ComponentInitializer.builder()
+                .debug(true)//调试
+                .start(this);
+```
+
+将debug设置为true的时候可以通过标签ComponentInitializer的log日志查看执行情况
 
 ![](http://rocketzly.androider.top/init_sucess.png)
-
-
-
-
-

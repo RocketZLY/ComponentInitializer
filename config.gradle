@@ -27,15 +27,17 @@ ext {
     ]
 
     libsVersion = [
+            junit                        : '4.12',
             appcompat                    : '28.0.0',
             auto_service                 : '1.0-rc2',
             javapoet                     : '1.11.1',
-            componentinitializer_api     : '1.0.1',
+            componentinitializer_api     : '1.0.2',
             componentinitializer_compiler: '1.0.1',
             componentinitializer_common  : '1.0.0'
     ]
 
     libs = [
+            junit                        : "junit:junit:$libsVersion.junit",
             kotlin                       : "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version",
             appcompat_v7                 : "com.android.support:appcompat-v7:$libsVersion.appcompat",
             auto_service                 : "com.google.auto.service:auto-service:$libsVersion.auto_service",
@@ -119,6 +121,8 @@ ext {
                 }
             }
         }
+        //增加通用的junit
+        handler.testImplementation libs.junit
     }
 
 }
