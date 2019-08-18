@@ -1,13 +1,11 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'  // 新增
 android {
-    compileSdkVersion 28
-
-
+    compileSdkVersion androidConfig.compileVersion
 
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 28
+        minSdkVersion androidConfig.minVersion
+        targetSdkVersion androidConfig.targetVersion
         versionCode 1
         versionName "1.0"
 
@@ -26,16 +24,15 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-//    api project(':ComponentInitializerCommon')
-    api 'com.rocketzly:componentinitializer-common:1.0.0'
+    generateDependencies(it, ComponentInitializerApiDependencies)
 }
 
 // 新增
 publish {
-    userOrg = 'zhuliyuan'        //bintray.com用户名
-    groupId = 'com.rocketzly'    //jcenter上的路径
+    userOrg = publishConfig.userOrg     //bintray.com用户名
+    groupId = publishConfig.groupId    //jcenter上的路径
     artifactId = 'componentinitializer-api'   //项目名称
     publishVersion = '1.0.1'//版本号
-    desc = '一个组件初始化辅助工具'//描述，自由填写
-    website = 'https://github.com/RocketZLY/ComponentInitializer' // 网址，自由填写
+    desc = publishConfig.desc//描述，自由填写
+    website = publishConfig.website // 网址，自由填写
 }
